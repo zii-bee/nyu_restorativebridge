@@ -1,4 +1,4 @@
-const SERVERURL = 'https://0070-5-195-74-111.ngrok-free.app';
+const SERVERURL = 'https://f82f-5-195-74-111.ngrok-free.app';
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList } from 'react-native';
 import io from 'socket.io-client';
@@ -59,17 +59,34 @@ export default function StudentChat() {
     };
   }, []);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (input.trim().length > 0) {
-      const messageData = { sender: 'student', text: input };
-      // Append the message locally for immediate UI feedback.
-      setMessages((prev) => [...prev, messageData]);
-
-      // Emit the message to the server.
-      if (socketRef.current) {
-        socketRef.current.emit('message', messageData);
+      try {
+        const userId = await AsyncStorage.getItem('userId');
+        
+        if (!userId) {
+          console.error("Cannot send message: userId not found in AsyncStorage");
+          return;
+        }
+        
+        const messageData = { 
+          sender: 'student', 
+          text: input,
+          studentId: userId  // Add the studentId to the message data
+        };
+        
+        // Append the message locally for immediate UI feedback
+        setMessages((prev) => [...prev, messageData]);
+        
+        // Emit the message to the server
+        if (socketRef.current) {
+          socketRef.current.emit('message', messageData);
+        }
+        
+        setInput('');
+      } catch (error) {
+        console.error('Error sending message:', error);
       }
-      setInput('');
     }
   };
 
